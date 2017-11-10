@@ -1,6 +1,26 @@
 #!/bin/bash
+USERNAME=$1
+SSHPRIVATEDATA=$2
+SSHPUBLICDATA=$3
 
-yum -y install wget git net-tools bind-utils iptables-services bridge-utils bash-completion
+mkdir -p /home/$USERNAME/.ssh
+echo $SSHPUBLICDATA > /home/$USERNAME/.ssh/id_rsa.pub
+echo $SSHPRIVATEDATA | base64 --d > /home/$USERNAME/.ssh/id_rsa
+chown $USERNAME /home/$USERNAME/.ssh/id_rsa.pub
+chmod 600 /home/$USERNAME/.ssh/id_rsa.pub
+chown $USERNAME /home/$USERNAME/.ssh/id_rsa
+chmod 600 /home/$USERNAME/.ssh/id_rsa
+
+mkdir -p /root/.ssh
+echo $SSHPUBLICDATA > /root/.ssh/id_rsa.pub
+echo $SSHPRIVATEDATA | base64 --d > /root/.ssh/id_rsa
+chown root /root/.ssh/id_rsa.pub
+chmod 600 /root/.ssh/id_rsa.pub
+chown root /root/.ssh/id_rsa
+chmod 600 /root/.ssh/id_rsa
+
+yum -y update
+yum -y install httpd-tools wget git net-tools bind-utils iptables-services bridge-utils bash-completion
 
 mkdir -p /var/lib/origin/openshift.local.volumes
 ZEROVG=$( parted -m /dev/sda print all 2>/dev/null | grep unknown | grep /dev/sd | cut -d':' -f1 | head -n1)
@@ -40,3 +60,4 @@ growpart $rootdrive $part_number -u on
 xfs_growfs $rootdev
 
 touch /root/.updateok
+systemctl reboot
